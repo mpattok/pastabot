@@ -169,7 +169,7 @@ class TTS(commands.Cog):
     @command(help='Deactivate TTS')
     async def notts(self, ctx, user_id=None):
         if user_id is None: user_id = str(ctx.author.id)
-        if user_id != str(ctx.author.id) and await self.app.auth.verify(ctx, auth.MODERATOR):
+        if user_id != str(ctx.author.id) and await self.app.auth.verify(ctx, Auth.MODERATOR):
             return
         await self.remove_tts(ctx, user_id)
     @command(help='Get list of TLDs for TTS')

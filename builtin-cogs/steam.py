@@ -21,7 +21,7 @@ class GameInfo:
     def __repr__(self):
         return f"GameInfo {{name={self.name}, initial={self.initial}, final={self.final}}}"
     @staticmethod
-    def from_response(res):
+    def from_response(res, app_id):
         if res.status_code != 200: raise ValueError(f"Could not fetch game {app_id}")
         data = res.json()[str(app_id)]["data"]
         try:
@@ -39,12 +39,12 @@ class GameInfo:
     @staticmethod
     def fetch(app_id):
         res = requests.get(GameInfo.STEAM_URL, params=GameInfo.params(app_id))
-        return GameInfo.from_response(res)
+        return GameInfo.from_response(res, app_id)
     @staticmethod
     async def fetch_async(app_id):
         async with httpx.AsyncClient() as client:
-            res = await client.get(GameInfo.STEAM_URL, GameInfo.params(app_id))
-        return GameInfo.from_response(res)
+            res = await client.get(GameInfo.STEAM_URL, params=GameInfo.params(app_id))
+        return GameInfo.from_response(res, app_id)
 
 class Steam(commands.Cog):
     def __init__(self, app):

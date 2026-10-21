@@ -7,8 +7,9 @@ import importlib.util
 import inspect
 import os
 from pathlib import Path
-import subprocess
+import requests
 import sys
+import time
 
 from tools.auth import Auth
 from tools.config import Config
@@ -17,13 +18,13 @@ from tools import musicq
 class App:
     # basic infrastructure methods
     def __init__(self, *cog_dirs, enable_ip=True):
-        self.enable_ip = enable_ip
         self.config = Config('config.json', is_async=True)
         self.auth = Auth(self.config)
         self.musicq = musicq.Queue()
-        self.intents = discord.Intents.default()
-        self.intents.message_content = True
-        self.bot = commands.Bot(command_prefix='!', intents=self.intents)
+        self.ip = {'enabled': enable_ip, 'ip': None, 'time': 0, 'ttl': 3600}
+        intents = discord.Intents.default()
+        intents.message_content = True
+        self.bot = commands.Bot(command_prefix='!', intents=intents)
         for cog_dir in cog_dirs: self.add_cogs(cog_dir)
     def run(self):
         token = self.get_token()
@@ -62,9 +63,11 @@ class App:
                 vc = await ctx.author.voice.channel.connect()
         return vc
     def get_ip(self):
-        if not self.enable_ip:
-            return 'IP not enabled'
-        return subprocess.run(['curl', 'ipinfo.io/ip'], capture_output=True).stdout.decode()
+        if not self.ip['enabled']: return 'IP not enabled'
+        if self.ip['ip'] is None or time.time() - self.ip['time'] > self.ip['ttl']:
+            self.ip['ip'] = requests.get('https://ipinfo.io/ip').content.decode()
+            self.ip['time'] = time.time()
+        return str(self.ip['ip'])
     async def send_dm(self, user_id, msg):
         user = await self.bot.fetch_user(int(user_id))
         channel = user.dm_channel or await self.bot.create_dm(user)
