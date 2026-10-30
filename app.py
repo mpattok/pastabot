@@ -17,7 +17,7 @@ from tools import musicq
 
 class App:
     # basic infrastructure methods
-    def __init__(self, *cog_dirs, enable_ip=True):
+    def __init__(self, *cog_dirs, enable_ip=True, allow_cog_load_fail=False):
         self.config = Config('config.json', is_async=True)
         self.auth = Auth(self.config)
         self.musicq = musicq.Queue()
@@ -25,7 +25,7 @@ class App:
         intents = discord.Intents.default()
         intents.message_content = True
         self.bot = commands.Bot(command_prefix='!', intents=intents)
-        for cog_dir in cog_dirs: self.add_cogs(cog_dir)
+        for cog_dir in cog_dirs: self.add_cogs(cog_dir, allow_fail=allow_cog_load_fail)
     def run(self):
         token = self.get_token()
         if token is None:
@@ -37,7 +37,7 @@ class App:
         env = dotenv.dotenv_values('.env')
         if 'DISCORD_TOKEN' in env: return env['DISCORD_TOKEN']
         return os.getenv('DISCORD_TOKEN')
-    def add_cogs(self, cog_dir):
+    def add_cogs(self, cog_dir, allow_fail=False):
         app_root = str(Path(__file__).resolve().parent)
         if app_root not in sys.path: sys.path.insert(0, app_root)
         end = 0
@@ -55,6 +55,7 @@ class App:
                 end += 1
             except Exception as e:
                 print(f'Failed to load {path}: {e}')
+                if not allow_fail: raise e
     # utilities for cogs
     async def connect_to_vc(self, ctx):
         vc = ctx.voice_client
@@ -73,12 +74,14 @@ class App:
         channel = user.dm_channel or await self.bot.create_dm(user)
         await channel.send(msg)
 
-def command(auth=None, *args, **kwargs):
+def command(auth=None, catch=True, *args, **kwargs):
     def decorator(cmd):
         @wraps(cmd)
         async def checked_command(self, ctx, *cmd_args):
             if await self.app.auth.verify(ctx, auth): return
-            try: return await cmd(self, ctx, *cmd_args)
-            except Exception as e: await ctx.send(f'{cmd.__name__}: {e}')
+            if catch:
+                try: return await cmd(self, ctx, *cmd_args)
+                except Exception as e: await ctx.send(f'{cmd.__name__}: {e}')
+            else: return await cmd(self, ctx, *cmd_args)
         return commands.command(*args, **kwargs)(checked_command)
     return decorator
