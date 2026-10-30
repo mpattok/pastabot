@@ -73,6 +73,29 @@ class App:
         user = await self.bot.fetch_user(int(user_id))
         channel = user.dm_channel or await self.bot.create_dm(user)
         await channel.send(msg)
+    @staticmethod
+    def buffer(msg, max_len=2000, split='\n'):
+        msgs = []
+        curr = ''
+        sep = ' ' if split is None else split
+        for line in (msg if split is '' else msg.split(split)):
+            if len(curr + line) < max_len:
+                curr += (sep if len(curr) > 0 else '') + line
+                continue
+            msgs.append(curr)
+            curr = line
+        if len(curr) > 0: msgs.append(curr)
+        return msgs
+    @staticmethod
+    def flatmap(f, xs):
+        return [y for mapped in map(f, xs) for y in mapped]
+    async def buffer_send(self, ctx, msg, max_len=2000):
+        msgs = App.buffer(msg, max_len)
+        msgs = App.flatmap(lambda msg: [msg] if len(msg) <= max_len else App.buffer(msg, max_len, ' '), msgs)
+        msgs = App.flatmap(lambda msg: [msg] if len(msg) <= max_len else App.buffer(msg, max_len, ''), msgs)
+        for msg in msgs:
+            await ctx.send(msg)
+
 
 def command(auth=None, catch=True, *args, **kwargs):
     def decorator(cmd):
