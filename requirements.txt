@@ -2,6 +2,7 @@ davey>=0.1.6
 discord.py>=2.7.1
 gtts>=2.5.4
 httpx>=0.28.1
+numpy>=2.0
 piper-tts>=1.8.0
 pycryptodome>=3.23.0
 pynacl>=1.6.2

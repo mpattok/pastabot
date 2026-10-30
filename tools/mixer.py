@@ -3,7 +3,7 @@
 
 import discord
 import subprocess
-import audioop
+import numpy as np
 import threading
 import time
 
@@ -80,7 +80,7 @@ class Mixer(discord.AudioSource):
                 c += b'\x00' * (FRAME_SIZE - len(c))  # pad
             padded.append(c)
         # combine the chunks
-        mixed = padded[0]
-        for c in padded[1:]:
-            mixed = audioop.add(mixed, c, 2)
-        return mixed
+        mixed = np.zeros(FRAME_SIZE // 2, dtype=np.int32)
+        for c in padded:
+            mixed += np.frombuffer(c, dtype='<i2')
+        return np.clip(mixed, -32768, 32767).astype('<i2').tobytes()

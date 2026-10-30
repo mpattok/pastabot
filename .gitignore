@@ -9,3 +9,4 @@ PLAYER_STORAGE.json
 shell.nix
 custom-cogs/
 .env
+.vscode/
