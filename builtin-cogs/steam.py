@@ -49,8 +49,21 @@ class GameInfo:
 class Steam(commands.Cog):
     def __init__(self, app):
         self.app = app
+    def get_record(self, author_id):
+        try: return self.app.config['steam'][author_id]
+        except: return None
+    async def send_list(self, ctx):
+        record = self.get_record(str(ctx.author.id))
+        if record is None:
+            await ctx.send('Not watching any games for you')
+            return
+        games = "\n".join(map(lambda app_id: f'[{app_id}] {record[app_id]['name']}', record))
+        await self.app.buffer_send(ctx, f'Watching these games for you:\n{games}')
     @command(help='Add/remove a steam app to be notified of sales')
-    async def steam(self, ctx, app_id):
+    async def steam(self, ctx, app_id=None):
+        if app_id is None:
+            await self.send_list(ctx)
+            return
         async with self.app.config as config:
             user_id = str(ctx.author.id)
             if app_id in config.get_or('steam', {}).get_or(user_id, {}):
