@@ -57,7 +57,7 @@ class Steam(commands.Cog):
         if record is None:
             await ctx.send('Not watching any games for you')
             return
-        games = "\n".join(map(lambda app_id: f'[{app_id}] {record[app_id]['name']}', record))
+        games = "\n".join(map(lambda app_id: f'- [{app_id}] {record[app_id]['name']}', record))
         await self.app.buffer_send(ctx, f'Watching these games for you:\n{games}')
     @command(help='Add/remove a steam app to be notified of sales')
     async def steam(self, ctx, app_id=None):
