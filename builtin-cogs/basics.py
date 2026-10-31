@@ -27,7 +27,7 @@ class Basics(commands.Cog):
         await ctx.send(' '.join(content))
     @command(help='Sends a DM through the bot', auth=Auth.ADMIN)
     async def dm(self, ctx, user_id, *content):
-        await self.send_dm(user_id, ' '.join(content))
+        await self.app.send_dm(user_id, ' '.join(content))
     @command(help='Replies with the username associated with the given ID')
     async def find(self, ctx, discord_id):
         user = await self.app.bot.fetch_user(int(discord_id))
