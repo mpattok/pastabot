@@ -1,6 +1,7 @@
 # this should be a drop-in replacement for discord.FFmpegPCMAudio,
 # with the added mix_in method seen below in the Mixer class
 
+from collections.abc import Callable
 import discord
 import subprocess
 import numpy as np
@@ -8,59 +9,69 @@ import threading
 import time
 
 # audio = 48K, 16-bit (2 bytes), dual channel
-# frame = 20ms 
+# frame = 20ms
 FRAME_SIZE = int(48000 * 2 * 2 * 20/1000)
 
 # utility class for a stream
+
+
 class FFmpegStream:
-    def __init__(self, path, after=None, track=None):
+    def __init__(self, path: str, after: Callable[[], object] | None = None, track: int | None = None) -> None:
         self.after = after
         self.track = track
         # get an ffmpeg stream of the source
         af = "volume=1.5" if track == 1 else "loudnorm"
         cmd = ["ffmpeg", "-i", path,
-               "-f", "s16le", # signed 16-bit little-endian
-               "-ar", "48000", # bitrate
-               "-ac", "2", # dual channel
-               "-filter:a", af, # normalize
-               "pipe:1"] # send to pipe instead of file
-        self.proc = subprocess.Popen(cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL
-        )
-    def read(self): 
-        # get frame of data
-        data = self.proc.stdout.read(FRAME_SIZE)
+               "-f", "s16le",  # signed 16-bit little-endian
+               "-ar", "48000",  # bitrate
+               "-ac", "2",  # dual channel
+               "-filter:a", af,  # normalize
+               "pipe:1"]  # send to pipe instead of file
+        self.proc: subprocess.Popen[bytes] | None = subprocess.Popen(cmd,
+                                                                     stdout=subprocess.PIPE,
+                                                                     stderr=subprocess.DEVNULL
+                                                                     )
+
+    def read(self) -> bytes:
+        # get frame of data (nothing if already closed)
+        data = b'' if self.proc is None or self.proc.stdout is None else self.proc.stdout.read(
+            FRAME_SIZE)
         # cleanup if we read nothing
         if not data and self.after is not None:
             self.after()
             self.after = None
         return data
-    def close(self):
+
+    def close(self) -> None:
         # clean up the ffmpeg stream
         if self.proc:
             self.proc.kill()
             self.proc = None
 
+
 class Mixer(discord.AudioSource):
-    def __init__(self, initial_path=None, after=None, track=None):
-        self.sources = []
+    def __init__(self, initial_path: str | None = None, after: Callable[[], object] | None = None, track: int | None = None) -> None:
+        self.sources: list[FFmpegStream] = []
         self.lock = threading.Lock()
-        if initial_path: self.mix_in(initial_path, after, track)
+        if initial_path:
+            self.mix_in(initial_path, after, track)
     # add a sound to the mixer
-    def mix_in(self, path, after=None, track=None):
+
+    def mix_in(self, path: str, after: Callable[[], object] | None = None, track: int | None = None) -> None:
         stream = FFmpegStream(path, after, track)
         time.sleep(1)
-        with self.lock: self.sources.append(stream)
+        with self.lock:
+            self.sources.append(stream)
     # used by discord to get a frame
-    def read(self):
+
+    def read(self) -> bytes:
         with self.lock:
             # play nothing if no sources (keeps stream alive)
             if not self.sources:
                 return b'\x00' * FRAME_SIZE
             # get each frame's chunks and update live sources
-            chunks = []
-            alive_sources = []
+            chunks: list[bytes] = []
+            alive_sources: list[FFmpegStream] = []
             for s in self.sources:
                 data = s.read()
                 if data:
@@ -73,7 +84,7 @@ class Mixer(discord.AudioSource):
         if not chunks:
             return b'\x00' * FRAME_SIZE
         # get chunks that are the right size
-        padded = []
+        padded: list[bytes] = []
         for c in chunks:
             # ensure length = frame size
             if len(c) < FRAME_SIZE:

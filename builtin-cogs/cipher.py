@@ -4,12 +4,14 @@ from Crypto.Random import get_random_bytes
 from discord.ext import commands
 import hashlib
 
-from app import command
+from app import App, command
+
 
 def hash(txt):
     m = hashlib.sha256()
     m.update(txt.encode())
     return m.hexdigest()
+
 
 def encrypt(msg, key):
     key = hash(key).encode()[:16]
@@ -17,6 +19,7 @@ def encrypt(msg, key):
     cipher = AES.new(key, AES.MODE_CBC, iv)
     ct = cipher.encrypt(pad(msg.encode(), 16))
     return iv.hex() + ct.hex()
+
 
 def decrypt(ct, key):
     key = hash(key).encode()[:16]
@@ -26,16 +29,18 @@ def decrypt(ct, key):
     padded = cipher.decrypt(ct)
     return unpad(padded, 16).decode()
 
+
 class Cipher(commands.Cog):
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, app: App):
+        self.app: App = app
+
     @command(help='Use a key to encrypt a message (AES)')
     async def encrypt(self, ctx, key, *, chars):
         msg = ''.join(chars)
         ct = encrypt(msg, key)
         await ctx.send(ct)
+
     @command(help='Use a key to decrypt a message')
     async def decrypt(self, ctx, key, ciphertext):
         pt = decrypt(ciphertext, key)
         await ctx.send(pt)
-
