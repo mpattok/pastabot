@@ -13,7 +13,7 @@ class Moderation(commands.Cog):
         self.muted = {}
 
     @command(help='Set a user\'s auth level. Your auth must be higher than theirs and the indicated level')
-    async def auth(self, ctx, tgt_id, tgt_auth=None):
+    async def auth(self, ctx, tgt_id, tgt_auth=None) -> None:
         if tgt_auth is None:
             await ctx.send(self.app.auth.get_auth_string(tgt_id))
             return
@@ -21,7 +21,7 @@ class Moderation(commands.Cog):
         await self.app.auth.update_auth(ctx, tgt_id, str(tgt_user), tgt_auth)
 
     @command(auth=Auth.MODERATOR)
-    async def delete(self, ctx, *msg_ids):
+    async def delete(self, ctx, *msg_ids) -> None:
         for msg_id in msg_ids:
             try:
                 msg = await ctx.fetch_message(msg_id)
@@ -31,7 +31,7 @@ class Moderation(commands.Cog):
                 await ctx.send(f'moderation.delete: {e}')
 
     @command(help='Reset pastabot', auth=Auth.TRUSTED)
-    async def reset(self, ctx):
+    async def reset(self, ctx) -> None:
         await ctx.send('Resetting...')
         cmd = ['python3'] + sys.argv
         try:
@@ -40,13 +40,13 @@ class Moderation(commands.Cog):
             await ctx.send(f'moderation.reset: {e}')
 
     @command(help='Automatically delete a user\'s messages for 10 minutes', auth=Auth.MODERATOR)
-    async def mute(self, ctx, user_id):
+    async def mute(self, ctx, user_id) -> None:
         async with self.app.config as config:
             config.get_or('muted', {}).get_or(user_id, {})[
                 str(ctx.channel.id)] = int(time.time())
 
     @command(help='Stop deleting a user\'s messages', auth=Auth.MODERATOR)
-    async def unmute(self, ctx, user_id):
+    async def unmute(self, ctx, user_id) -> None:
         if 'muted' not in self.app.config:
             return
         if user_id not in self.app.config['muted']:
@@ -66,7 +66,7 @@ class Moderation(commands.Cog):
         return time.time() - self.app.config['muted'][user_id][channel_id].value(int) < 10*60
 
     @commands.Cog.listener()
-    async def on_message(self, msg):
+    async def on_message(self, msg) -> None:
         if self.is_muted(str(msg.author.id), str(msg.channel.id)):
             try:
                 await msg.delete()

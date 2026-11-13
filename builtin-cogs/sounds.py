@@ -11,7 +11,7 @@ class Sounds(commands.Cog):
         self.app: App = app
 
     @command(help='Clear the sound queue')
-    async def clear(self, ctx):
+    async def clear(self, ctx) -> None:
         self.app.musicq.clear()
         await ctx.send("cleared the queue")
 
@@ -39,7 +39,7 @@ class Sounds(commands.Cog):
         return None
 
     @command(help='Play a sound by its name/path')
-    async def sound(self, ctx, *sound):
+    async def sound(self, ctx, *sound) -> None:
         sound = ' '.join(sound).strip()
         vc = await self.app.connect_to_vc(ctx)
         file = self.get_sound(sound)
@@ -49,15 +49,15 @@ class Sounds(commands.Cog):
         self.app.musicq.add(file, vc=vc)
 
     @command(help='Connect the bot to the VC you\'re in')
-    async def join(self, ctx):
+    async def join(self, ctx) -> None:
         await self.app.connect_to_vc(ctx)
 
     @command(help='Disconnect the bot from VC')
-    async def leave(self, ctx):
+    async def leave(self, ctx) -> None:
         await ctx.voice_client.disconnect()
 
     @command(help='Stop the currently playing sound')
-    async def stop(self, ctx, track: str | None = None):
+    async def stop(self, ctx, track: str | None = None) -> None:
         try:
             assert isinstance(track, str)
             track_no = int(track)
@@ -104,7 +104,7 @@ class Sounds(commands.Cog):
         return None
 
     @command(help='Get a list of sounds, optionally under a particular directory')
-    async def sounds(self, ctx, query=None):
+    async def sounds(self, ctx, query=None) -> None:
         if query is None:
             await ctx.send('sounds:')
             files = []

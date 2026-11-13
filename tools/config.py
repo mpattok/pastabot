@@ -171,8 +171,8 @@ class Config:
     def iter_json(self) -> Iterator[JSON]:
         return self.iter_map(Config.json_ref)
 
-    def iter_value[T](self, t: type[T]) -> Iterator[T]:
-        return self.iter_map(lambda cfg: cfg.value(t))
+    def iter_value[T](self, t: type[T], coerce: bool = True) -> Iterator[T]:
+        return self.iter_map(lambda cfg: cfg.value(t, coerce=coerce))
 
     class Writable:
         def __init__(self, config: Config, opener: Config.Writable | None = None):
@@ -218,18 +218,21 @@ class Config:
         def iter_json(self) -> Iterator[JSON]:
             return self.config.iter_json()
 
-        def iter_value[T](self, t: type[T]) -> Iterator[T]:
-            return self.config.iter_value(t)
+        def iter_value[T](self, t: type[T], coerce: bool = True) -> Iterator[T]:
+            return self.config.iter_value(t, coerce=coerce)
+
+        def save(self, force: bool = False) -> bool:
+            return self.config.save(force=force)
 
         
         # new methods in writable context
 
-        def check_open(self):
+        def check_open(self) -> None:
             if not self.opener.open:
                 raise RuntimeError(
                     'Attempting to write with closed Config.Writable')
 
-        def __setitem__(self, key: Key, val: JSON):
+        def __setitem__(self, key: Key, val: JSON) -> None:
             self.check_open()
             json = self.json_ref()
             if isinstance(json, list):
@@ -241,7 +244,7 @@ class Config:
             raise TypeError(
                 'Config.Writable.__setitem__: can only set on list or dict')
 
-        def __delitem__(self, key: Key):
+        def __delitem__(self, key: Key) -> None:
             self.check_open()
             json = self.json_ref()
             if isinstance(json, list):
@@ -253,7 +256,7 @@ class Config:
             raise TypeError(
                 'Config.Writable.__delitem__: can only delete from list or dict')
 
-        def append(self, val: JSON):
+        def append(self, val: JSON) -> None:
             self.check_open()
             verify_type(self.json_ref(), list).append(val)
 
@@ -321,7 +324,7 @@ class Config:
         self._release(exc_type is None)
         return False
 
-    def _release(self, do_save: bool):
+    def _release(self, do_save: bool) -> None:
         try:
             if do_save:
                 self.save()

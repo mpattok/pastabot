@@ -8,7 +8,7 @@ class Watchlist(commands.Cog):
     def __init__(self, app: App):
         self.app: App = app
 
-    async def add(self, item):
+    async def add(self, item) -> None:
         async with self.app.config as config:
             config.get_or('watchlist', []).append(item)
 
@@ -27,7 +27,7 @@ class Watchlist(commands.Cog):
             del watchlist[i - 1]
             return item
 
-    async def ls(self, ctx):
+    async def ls(self, ctx) -> None:
         lines = self.app.config['watchlist'] if 'watchlist' in self.app.config else [
         ]
         if len(lines) == 0:
@@ -57,7 +57,7 @@ class Watchlist(commands.Cog):
         await ctx.send(f'Added {item} to watchlist')
 
     @command(help='Remove an item from the watch list by its name or index', auth=Auth.TRUSTED)
-    async def watched(self, ctx, *item):
+    async def watched(self, ctx, *item) -> None:
         item = ' '.join(item).strip()
         by_item = await self.remove_item(item)
         if by_item is not None:

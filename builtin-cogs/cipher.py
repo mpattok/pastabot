@@ -35,12 +35,12 @@ class Cipher(commands.Cog):
         self.app: App = app
 
     @command(help='Use a key to encrypt a message (AES)')
-    async def encrypt(self, ctx, key, *, chars):
+    async def encrypt(self, ctx, key, *, chars) -> None:
         msg = ''.join(chars)
         ct = encrypt(msg, key)
         await ctx.send(ct)
 
     @command(help='Use a key to decrypt a message')
-    async def decrypt(self, ctx, key, ciphertext):
+    async def decrypt(self, ctx, key, ciphertext) -> None:
         pt = decrypt(ciphertext, key)
         await ctx.send(pt)

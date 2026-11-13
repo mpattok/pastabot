@@ -10,7 +10,7 @@ class Basics(commands.Cog):
         self.app: App = app
 
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         pasta_ip = self.app.get_ip()
         msg = f'{self.app.bot.user} is online ({pasta_ip})'
         try:
@@ -21,28 +21,28 @@ class Basics(commands.Cog):
         print(msg)
 
     @command(help='Replies with "pong!"')
-    async def ping(self, ctx):
+    async def ping(self, ctx) -> None:
         await ctx.send('pong!')
 
     @command(help='Replies with the bot\'s IP')
-    async def ip(self, ctx):
+    async def ip(self, ctx) -> None:
         await ctx.send(self.app.get_ip())
 
     @command(help='Repeats what you say', auth=Auth.MODERATOR)
-    async def echo(self, ctx, *content):
+    async def echo(self, ctx, *content) -> None:
         await ctx.send(' '.join(content))
 
     @command(help='Sends a DM through the bot', auth=Auth.ADMIN)
-    async def dm(self, ctx, user_id, *content):
+    async def dm(self, ctx, user_id, *content) -> None:
         await self.app.send_dm(user_id, ' '.join(content))
 
     @command(help='Replies with the username associated with the given ID')
-    async def find(self, ctx, discord_id):
+    async def find(self, ctx, discord_id) -> None:
         user = await self.app.bot.fetch_user(int(discord_id))
         await ctx.send(str(user))
 
     @command(help='Replies with the avatar associated with the given ID')
-    async def avatar(self, ctx, discord_id):
+    async def avatar(self, ctx, discord_id) -> None:
         user = await self.app.bot.fetch_user(int(discord_id))
         url = user.display_avatar.url
         embed = discord.Embed(title=f'avatar: {user.name}')
@@ -50,13 +50,13 @@ class Basics(commands.Cog):
         await ctx.send(embed=embed)
 
     @command(help='Replies with your ID')
-    async def whoami(self, ctx):
+    async def whoami(self, ctx) -> None:
         await ctx.send(ctx.author.id)
 
-    @command(help='Raises an exception. Used to test the command decorator error handling')
-    async def throw(self, ctx, *msg):
+    @command(help='Raises an exception. Used to test the command decorator error handling', catch=True)
+    async def throw(self, ctx, *msg) -> None:
         raise Exception(' '.join(msg))
 
     @command(auth=Auth.MODERATOR, help='Prints to the console. Used to test stdout logging')
-    async def console(self, ctx, *msg):
+    async def console(self, ctx, *msg) -> None:
         print(' '.join(msg), flush=True)

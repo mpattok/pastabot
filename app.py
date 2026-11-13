@@ -15,7 +15,7 @@ from typing import Any, TypedDict
 
 from tools.auth import Auth
 from tools.config import Config
-from tools import musicq
+from tools.musicq import Queue as MusicQueue
 
 # types
 
@@ -35,10 +35,10 @@ type Context = commands.Context[commands.Bot]
 class App:
     # basic infrastructure methods
 
-    def __init__(self, *cog_dirs: str, enable_ip: bool = True, allow_cog_load_fail: bool = False) -> None:
+    def __init__(self, *cog_dirs: str, enable_ip: bool = True, allow_cog_load_fail: bool = False):
         self.config = Config.open('config.json', is_async=True)
         self.auth = Auth(self.config)
-        self.musicq = musicq.Queue()
+        self.musicq = MusicQueue()
         self.ip: IP = {'enabled': enable_ip,
                        'ip': None, 'time': 0, 'ttl': 3600}
         intents = discord.Intents.default()
@@ -158,7 +158,7 @@ class App:
 # discord.ext.commands.command, with added arguments for auth and error catching.
 # auth sets a minimum auth level to call the command.
 # catch specifies if errors should be caught and reported to the caller.
-def command(auth: int | None = None, catch: bool = True, *args: Any, **kwargs: Any
+def command(*args: Any, auth: int | None = None, catch: bool = False, **kwargs: Any
             ) -> Callable[[CmdMethod], Command]:
     def decorator(cmd: CmdMethod) -> Command:
         @wraps(cmd)
@@ -171,6 +171,6 @@ def command(auth: int | None = None, catch: bool = True, *args: Any, **kwargs: A
                 except Exception as e:
                     await ctx.send(f'{cmd.__name__}: {e}')
             else:
-                return await cmd(self, ctx, *cmd_args)
+                return await cmd(self, ctx, *cmd_args, **cmd_kwargs)
         return commands.command(*args, **kwargs)(wrapped_command)
     return decorator

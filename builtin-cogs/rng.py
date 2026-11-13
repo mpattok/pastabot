@@ -9,7 +9,7 @@ class RNG(commands.Cog):
         self.app: App = app
 
     @command(help='Pick a random number from 1 to n')
-    async def rng(self, ctx, n):
+    async def rng(self, ctx, n) -> None:
         try:
             n = int(n)
             assert n > 1
@@ -21,7 +21,7 @@ class RNG(commands.Cog):
         await ctx.send(f'Chose {x}')
 
     @command(help='Randomly decide between a comma-separated list of options')
-    async def choose(self, ctx, *choices):
+    async def choose(self, ctx, *choices) -> None:
         try:
             random.seed()
             choices = ' '.join(choices).split(',')

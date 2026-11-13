@@ -1,7 +1,7 @@
 from app import App
 
 
-def main():
+def main() -> None:
     app = App('builtin-cogs', 'custom-cogs')
     app.run()
 

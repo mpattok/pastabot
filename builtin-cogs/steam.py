@@ -65,7 +65,7 @@ class Steam(commands.Cog):
         except:
             return None
 
-    async def send_list(self, ctx):
+    async def send_list(self, ctx) -> None:
         record = self.get_record(str(ctx.author.id))
         if record is None:
             await ctx.send('Not watching any games for you')
@@ -75,7 +75,7 @@ class Steam(commands.Cog):
         await self.app.buffer_send(ctx, f'Watching these games for you:\n{games}')
 
     @command(help='Add/remove a steam app to be notified of sales')
-    async def steam(self, ctx, app_id=None):
+    async def steam(self, ctx, app_id=None) -> None:
         if app_id is None:
             await self.send_list(ctx)
             return
@@ -148,11 +148,11 @@ class Steam(commands.Cog):
         return messages
 
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         self.check_sales.start()
 
     @command(help='Manually check Steam sales', auth=Auth.MODERATOR)
-    async def steamdebug(self, ctx):
+    async def steamdebug(self, ctx) -> None:
         messages = await self.check_sales()
         for user_id in messages:
             await ctx.send(f'To <@{user_id}>:\nSales:\n{messages[user_id]["sale"]}\nNo sales:\n{messages[user_id]["nosale"]}')

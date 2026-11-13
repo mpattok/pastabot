@@ -27,7 +27,7 @@ def file_exists(path):
     return True
 
 
-async def log_and_send(msg, ctx=None):
+async def log_and_send(msg, ctx=None) -> None:
     print(msg)
     if ctx is not None:
         await ctx.send(msg)
@@ -66,7 +66,7 @@ class PiperCache:
         node.nxt = None
         return node
 
-    def insert(self, name, voice):
+    def insert(self, name, voice) -> None:
         try:
             self.map[name].voice = voice
             self.touch(name)
@@ -82,7 +82,7 @@ class PiperCache:
             self.tail = node
         self.map[name] = node
 
-    def touch(self, name):
+    def touch(self, name) -> None:
         node = self.unlink(name, from_map=False)
         node.nxt = self.head
         self.head = node
@@ -93,13 +93,13 @@ class PiperCache:
         self.touch(name)
         return self.map[name].voice
 
-    def __setitem__(self, name, voice):
+    def __setitem__(self, name, voice) -> None:
         self.insert(name, voice)
 
     def __len__(self):
         return len(self.map)
 
-    def __delitem__(self, name):
+    def __delitem__(self, name) -> None:
         self.unlink(name)
 
     def __contains__(self, name):
@@ -187,7 +187,7 @@ class TTS(commands.Cog):
         self.app: App = app
         self.voices = PiperCache()
 
-    async def speak(self, ctx, filename, filedir):
+    async def speak(self, ctx, filename, filedir) -> None:
         if filename is None or filedir is None:
             return
         try:
@@ -198,12 +198,12 @@ class TTS(commands.Cog):
         except Exception as e:
             await ctx.send(f'tts.speak: {e}')
 
-    async def add_tts(self, ctx, user_id, tld, lang):
+    async def add_tts(self, ctx, user_id, tld, lang) -> None:
         async with self.app.config as config:
             config.get_or('tts', {}).get_or(str(user_id), {})[
                 str(ctx.channel.id)] = {'tld': tld, 'lang': lang}
 
-    async def remove_tts(self, ctx, user_id):
+    async def remove_tts(self, ctx, user_id) -> None:
         async with self.app.config as config:
             if 'tts' not in config:
                 return
@@ -214,7 +214,7 @@ class TTS(commands.Cog):
             del config['tts'][str(user_id)][str(ctx.channel.id)]
 
     @command(help='Activate TTS. For yourself, use !tts [tld (e.g. us or co.uk)] [lang (e.g. en)]. Default is co.uk en', auth=Auth.TRUSTED)
-    async def tts(self, ctx, user_id=None, tld=None, lang=None):
+    async def tts(self, ctx, user_id=None, tld=None, lang=None) -> None:
         if lang is None and user_id is not None and len(user_id) < 8:
             lang, tld, user_id = tld, user_id, None
         if user_id is None:
@@ -229,7 +229,7 @@ class TTS(commands.Cog):
         await self.add_tts(ctx, user_id, tld, lang)
 
     @command(help='Deactivate TTS')
-    async def notts(self, ctx, user_id=None):
+    async def notts(self, ctx, user_id=None) -> None:
         if user_id is None:
             user_id = str(ctx.author.id)
         if user_id != str(ctx.author.id) and await self.app.auth.reject(ctx, Auth.MODERATOR):
@@ -237,7 +237,7 @@ class TTS(commands.Cog):
         await self.remove_tts(ctx, user_id)
 
     @command(help='Get list of TLDs for TTS')
-    async def vtts(self, ctx):
+    async def vtts(self, ctx) -> None:
         await ctx.send("""Available tts accents:
 Australia - com.au
 United Kingdom - co.uk
@@ -249,7 +249,7 @@ South Africa - co.za
 Nigeria - com.ng""")
 
     @command(help='Check if you have TTS on in this channel')
-    async def checktts(self, ctx):
+    async def checktts(self, ctx) -> None:
         try:
             entry = self.app.config['tts'][str(
                 ctx.author.id)][str(ctx.channel.id)].json_ref()
@@ -258,14 +258,14 @@ Nigeria - com.ng""")
             await ctx.send('You do not have TTS on in this channel')
 
     @command(help='Show info on using Piper TTS')
-    async def piper(self, ctx):
+    async def piper(self, ctx) -> None:
         msg = '''To use a piper voice, use `!tts piper [voice code]`.
         You can get voice codes from https://rhasspy.github.io/piper-samples
         (choose parameters and copy the code, which looks like en_US-amy-medium'''
         await ctx.send(msg)
 
     @commands.Cog.listener()
-    async def on_message(self, msg):
+    async def on_message(self, msg) -> None:
         ctx = await self.app.bot.get_context(msg)
         try:
             entry = self.app.config['tts'][str(
@@ -288,7 +288,7 @@ Nigeria - com.ng""")
                 ctx.channel.id)]['time'] = str(int(time.time()))
 
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         if 'tts' not in self.app.config:
             return
         to_load = {}
